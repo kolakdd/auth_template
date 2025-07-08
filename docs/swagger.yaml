@@ -1,0 +1,254 @@
+definitions:
+  httputil.ResponseHTTP:
+    properties:
+      data: {}
+      message:
+        type: string
+      success:
+        type: boolean
+    type: object
+  models.LoginTokens:
+    properties:
+      accessToken:
+        example: eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3NTE4ODM0NDIsInN1YiI6ImJhciJ9.1ZO0Znrv0CU1gYI52o7tTP1jHjzmpCi7ufyyStFcygeHWDCFZMya-12Uuswy_8saqxVs0mZx25hApJ3bpbPozA
+        type: string
+      refreshToken:
+        example: tmKpWaddK0DH5ldOEAQTUaWeH7hVabpH82cSLBzKw1ejXReJ2H+BHIRiLs7S3Nbm46c3sDko
+        type: string
+    type: object
+  models.RegisterUserDtoReq:
+    properties:
+      name:
+        example: Nikolay
+        type: string
+    type: object
+  models.User:
+    properties:
+      createdAt:
+        example: "2025-07-07T07:01:27.73104763Z"
+        type: string
+      deactivated:
+        example: false
+        type: boolean
+      guid:
+        example: ' a81bc81b-dead-4e5d-abff-90865d1e13b1'
+        type: string
+      lastLoginAt:
+        example: "2025-07-07T07:01:27.73104763Z"
+        type: string
+      name:
+        example: Nikolay
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/v1/login/{guid}:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует access и refresh токен по GUID пользователя для авторизации
+        в системе
+      parameters:
+      - description: Guid авторизируемого пользователя
+        in: path
+        name: guid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httputil.ResponseHTTP'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LoginTokens'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+      summary: Логин в систему
+      tags:
+      - auth
+  /api/v1/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Генерирует access и refresh токен по ранее предоставленным при
+        авторизации токеном
+      parameters:
+      - description: Tokes
+        in: body
+        name: tokens
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginTokens'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httputil.ResponseHTTP'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LoginTokens'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+      summary: Обновление токенов пользователя
+      tags:
+      - auth
+  /api/v1/register:
+    post:
+      consumes:
+      - application/json
+      description: Регистрирует нового пользователя в системе с заданным именем. Возвращает
+        информацию о пользователе с GUID
+      parameters:
+      - description: User data
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterUserDtoReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Success response
+          schema:
+            allOf:
+            - $ref: '#/definitions/httputil.ResponseHTTP'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+      summary: Регистрация нового пользователя
+      tags:
+      - auth
+  /api/v1/user/deactivate:
+    get:
+      consumes:
+      - application/json
+      deprecated: true
+      description: 'Блокирует пользователя пользователя по токенгу авторизации. Необходим
+        заголовок "Authorization": "Bearer {token}'
+      parameters:
+      - description: 'Заголовок авторизации. Пример: Bearer {token}'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httputil.ResponseHTTP'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+      security:
+      - Bearer: []
+      summary: Диактивация авторизованного пользователя
+      tags:
+      - user
+  /api/v1/user/me:
+    get:
+      consumes:
+      - application/json
+      description: 'По токену доступа возвращает информацию о пользователе. Необходим
+        заголовок "Authorization": "Bearer {token}'
+      parameters:
+      - description: 'Заголовок авторизации. Пример: Bearer {token}'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httputil.ResponseHTTP'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.LoginTokens'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+      security:
+      - Bearer: []
+      summary: Получение GUID текущего пользователя и информации о нем."
+      tags:
+      - user
+  /api/v1/user/unlogin:
+    get:
+      consumes:
+      - application/json
+      description: 'По токену авторизации деактивирует пользователя так, что он не
+        может запросить user/me или /refresh. Необходим заголовок "Authorization":
+        "Bearer {token}'
+      parameters:
+      - description: 'Заголовок авторизации. Пример: Bearer {token}'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/httputil.ResponseHTTP'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.User'
+              type: object
+        "400":
+          description: 'Invalid headers muts be "Authorization": "Bearer {token}'
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+        "403":
+          description: Access denied
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+      security:
+      - Bearer: []
+      summary: Деавторизация токена пользователя
+      tags:
+      - user
+swagger: "2.0"
