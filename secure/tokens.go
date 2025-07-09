@@ -49,10 +49,9 @@ func GenerateAccessToken(guid uuid.UUID, refID uuid.UUID) string {
 }
 
 // DecodeAccessToken декодирует токен в структуру AccessToken
-func DecodeAccessToken(tokenString string) (*AccessToken, error) {
-	key := os.Getenv("API_SECRET")
+func DecodeAccessToken(secret, tokenString string) (*AccessToken, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(key), nil
+		return []byte(secret), nil
 	},
 		jwt.WithValidMethods([]string{jwt.SigningMethodHS512.Alg()}),
 		jwt.WithoutClaimsValidation())
@@ -135,11 +134,8 @@ func DecodeRefreshToken(token string) (*RefreshToken, error) {
 
 func validateByteRefreshToken(base64Text []byte) (*RefreshToken, error) {
 	parseErr := fmt.Errorf("parse err")
-	fmt.Println("Base64Text = ", base64Text)
+
 	elems := strings.Split(string(base64Text), "|")
-
-	fmt.Println("elems = ", elems)
-
 	if len(elems) != 3 {
 		return nil, fmt.Errorf("refresh token not valid")
 	}
@@ -166,10 +162,9 @@ func HashRefreshToken(token string) string {
 	return string(hashedToken)
 }
 
-func ValidateAccessToken(tokenString string) (*AccessToken, error) {
-	key := os.Getenv("API_SECRET")
+func ValidateAccessToken(secret, tokenString string) (*AccessToken, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(key), nil
+		return []byte(secret), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS512.Alg()}))
 	if err != nil {
 		return nil, fmt.Errorf("token not valid")

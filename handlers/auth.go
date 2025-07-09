@@ -29,7 +29,6 @@ func NewAuthHandler(sa service.ServiceAuthI, su service.ServiceUserI) *AuthHandl
 // @Param user body models.RegisterUserDtoReq true "User data"
 // @Success 200 {object} httputil.ResponseHTTP{data=models.User} "Success response"
 // @Failure 400 {object} httputil.ResponseHTTP "Bad Request"
-// @Failure 500 {object} httputil.ResponseHTTP "Internal Server Error"
 // @Router /api/v1/register [post]
 func (h *AuthHandler) RegisterUser(c *fiber.Ctx) error {
 	userDto := new(models.RegisterUserDtoReq)
@@ -83,6 +82,7 @@ func (h *AuthHandler) LoginGUID(c *fiber.Ctx) error {
 // @Param tokens body models.LoginTokens true "Tokes"
 // @Success 200 {object} httputil.ResponseHTTP{data=models.LoginTokens}
 // @Failure 400 {object} httputil.ResponseHTTP "Bad Request"
+// @Failure 500 {object} httputil.ResponseHTTP "Internal Server Error"
 // @Router /api/v1/refresh [post]
 func (h *AuthHandler) RefreshTokens(c *fiber.Ctx) error {
 	tokensDto := new(models.LoginTokens)

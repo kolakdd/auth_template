@@ -251,4 +251,25 @@ paths:
       summary: Деавторизация токена пользователя
       tags:
       - user
+  /api/v1/webhook:
+    get:
+      consumes:
+      - application/json
+      description: Информирует о правильной работе запроса к вуб-хуку
+      parameters:
+      - description: 'Заголовок авторизации. Пример: Bearer {token}'
+        in: header
+        name: Authorization
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/httputil.ResponseHTTP'
+      summary: Тестовый веб-хук который позволяет проверить работы колбека."
+      tags:
+      - webhook
 swagger: "2.0"

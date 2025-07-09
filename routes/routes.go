@@ -12,13 +12,13 @@ import (
 )
 
 // New create an instance of Book app routes
-func New(app *fiber.App, db *gorm.DB) error {
+func New(app *fiber.App, db *gorm.DB, envRepo repository.RepositoryEnv) error {
 	app.Get("/swagger/*", swagger.HandlerDefault)
 
 	userRepo := repository.NewRepoUser(db)
 	authRepo := repository.NewRepoAuth(db)
-	authService := service.NewServiceAuth(authRepo, userRepo)
-	userService := service.NewServiceUser(authRepo, userRepo)
+	authService := service.NewServiceAuth(authRepo, userRepo, envRepo)
+	userService := service.NewServiceUser(authRepo, userRepo, envRepo)
 
 	authMiddleware := middleware.AuthMiddleware(authService, userService)
 
@@ -29,6 +29,8 @@ func New(app *fiber.App, db *gorm.DB) error {
 		})
 		return c.Next()
 	})
+
+	v1.Post("/webhook", handlers.WebhookExample)
 
 	authHandler := handlers.NewAuthHandler(authService, userService)
 

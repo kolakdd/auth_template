@@ -23,10 +23,11 @@ type ServiceUserI interface {
 type ServiceUser struct {
 	RAuth repository.RepositoryAuth
 	RUser repository.RepositoryUser
+	rEnv  repository.RepositoryEnv
 }
 
-func NewServiceUser(rAuth repository.RepositoryAuth, rUser repository.RepositoryUser) ServiceUserI {
-	return &ServiceUser{rAuth, rUser}
+func NewServiceUser(rAuth repository.RepositoryAuth, rUser repository.RepositoryUser, rEnv repository.RepositoryEnv) ServiceUserI {
+	return &ServiceUser{rAuth, rUser, rEnv}
 }
 
 func (s *ServiceUser) RegisterUser(dto *models.RegisterUserDtoReq) (*models.User, error) {
@@ -44,7 +45,7 @@ func (s *ServiceUser) UserMe(c *fiber.Ctx) *models.User {
 
 // DeativateMe деактивирует пользователя, пользователь больше не сможет взаимодействовать с аккаунтом
 func (s *ServiceUser) DeativateMe(authHeader string) (*models.User, error) {
-	accessToken, err := s.RAuth.ValidateAuthHeader(authHeader)
+	accessToken, err := s.RAuth.ValidateAuthHeader(s.rEnv.GetSecret(), authHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -81,10 +82,17 @@ func (s *ServiceUser) AuthMiddlewareFunc(c *fiber.Ctx) error {
 	if !strings.HasPrefix(authHeader, "Bearer ") {
 		return c.Status(http.StatusBadRequest).JSON(httputil.BadRequest("Invalid headers muts be \"Authorization\": \"Bearer {token}\""))
 	}
-	accessToken, err := s.RAuth.ValidateAuthHeader(authHeader)
+	accessToken, err := s.RAuth.ValidateAuthHeader(s.rEnv.GetSecret(), authHeader)
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": "invalid acces token",
+			"error": "invalid access token",
+		})
+	}
+
+	exist, _ := s.RAuth.GetInvalidAccessToken(accessToken.ID)
+	if exist {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "access token deactivated",
 		})
 	}
 	user, err := s.RUser.GetUser(accessToken.Sub)

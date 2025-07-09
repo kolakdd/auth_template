@@ -352,6 +352,38 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/webhook": {
+            "get": {
+                "description": "Информирует о правильной работе запроса к вуб-хуку",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "webhook"
+                ],
+                "summary": "Тестовый веб-хук который позволяет проверить работы колбека.\"",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Заголовок авторизации. Пример: Bearer {token}",
+                        "name": "Authorization",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/httputil.ResponseHTTP"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {

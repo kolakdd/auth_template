@@ -11,6 +11,7 @@ import (
 // 2) валидирует токен по времени протухания и по структуре
 // 3) наличие пользователя по sub
 // 4) наличие деактивировации на аккаунте
+// 5) проверка токена на деавторизацию
 func AuthMiddleware(authService service.ServiceAuthI, userService service.ServiceUserI) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		return userService.AuthMiddlewareFunc(c)

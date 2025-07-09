@@ -1,7 +1,20 @@
 # auth_template
 
+
+# Запуск проекта
+
+Для запуска проекта используйте:
+```
+docker compose up -d
+```
+
 # Swagger 
 
+Свагер по адресу:
 ```
-http://localhost:3000/swagger/index.html
+http://127.0.0.1:3000/swagger/index.html
 ```
+
+# Начало работы
+
+Перед началом работы создайте пользователя для получения GUID

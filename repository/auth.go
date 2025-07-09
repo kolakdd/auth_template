@@ -16,9 +16,10 @@ import (
 type RepositoryAuth interface {
 	CreateRefreshToken(token string, userGUID uuid.UUID) (*models.RefreshToken, error)
 	CreateInvalidAccessToken(token uuid.UUID, userGUID uuid.UUID) (*models.InvalidAccessToken, error)
+	GetInvalidAccessToken(guid uuid.UUID) (bool, *models.InvalidAccessToken)
 	GetRefreshToken(token string, userGUID uuid.UUID) (*models.RefreshToken, error)
 	DeleteRefreshToken(tokenHash string) error
-	ValidateAuthHeader(authHeader string) (*secure.AccessToken, error)
+	ValidateAuthHeader(secret, authHeader string) (*secure.AccessToken, error)
 }
 
 type repositoryAuth struct {
@@ -41,7 +42,6 @@ func (r *repositoryAuth) CreateRefreshToken(token string, userGUID uuid.UUID) (*
 	return &refreshToken, nil
 }
 
-// CreateInvalidAccessToken создает запись в бд с невалидным токеном
 func (r *repositoryAuth) CreateInvalidAccessToken(guid uuid.UUID, userGUID uuid.UUID) (*models.InvalidAccessToken, error) {
 	q := query.Use(r.db)
 	invalidAccessToken := models.InvalidAccessTokenDBNew(guid, userGUID)
@@ -51,6 +51,18 @@ func (r *repositoryAuth) CreateInvalidAccessToken(guid uuid.UUID, userGUID uuid.
 	return &invalidAccessToken, nil
 }
 
+func (r *repositoryAuth) GetInvalidAccessToken(guid uuid.UUID) (bool, *models.InvalidAccessToken) {
+	var tokens []models.InvalidAccessToken
+	if err := r.db.Where("guid = ?", guid).Find(&tokens).Error; err != nil {
+		return false, nil
+	}
+	if len(tokens) == 0 {
+		return false, nil
+	}
+	return true, &tokens[0]
+}
+
+// GetRefreshToken получает рефреш токены пользователя и сравнивает их bcrypt в поиске подходящего
 func (r *repositoryAuth) GetRefreshToken(token string, userGUID uuid.UUID) (*models.RefreshToken, error) {
 	if len(token) > 72 {
 		token = token[:72]
@@ -66,7 +78,6 @@ func (r *repositoryAuth) GetRefreshToken(token string, userGUID uuid.UUID) (*mod
 			return &tokens[i], nil
 		}
 	}
-	fmt.Println("here ")
 	return nil, fmt.Errorf("token not found")
 }
 
@@ -76,8 +87,8 @@ func (r *repositoryAuth) DeleteRefreshToken(hashToken string) error {
 }
 
 // ValidateAuthHeader проверят access токен на правильность формата
-func (r *repositoryAuth) ValidateAuthHeader(authHeader string) (*secure.AccessToken, error) {
-	accessToken, err := secure.ValidateAccessToken(strings.Split(authHeader, " ")[1])
+func (r *repositoryAuth) ValidateAuthHeader(secret, authHeader string) (*secure.AccessToken, error) {
+	accessToken, err := secure.ValidateAccessToken(secret, strings.Split(authHeader, " ")[1])
 	if err != nil {
 		slog.Warn("Validate token ", "err ", err)
 		return nil, fmt.Errorf("access token not valid")
